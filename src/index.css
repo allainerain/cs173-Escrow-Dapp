@@ -3,3 +3,23 @@ html,
 body {
   height: 100%;
 }
+
+.card{
+  margin-top:50px;
+  padding: 2%
+}
+
+.btn{
+  margin: 0px 15px 15px 0px;
+  width: 100%;
+  border-radius: 50px;
+  background: black;
+  font-size: 100%;  /* text-size: 12px; */
+}
+
+.center{
+  margin: auto;
+  width: 50%;
+  border: 3px solid green;
+  padding: 10px;
+}

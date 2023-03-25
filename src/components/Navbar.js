@@ -21,10 +21,10 @@ const Navbar = () => {
   };
 
   return (
-    <div className="navbar navbar-dark bg-dark fixed-top">
+    <div className="navbar navbar-dark bg-dark">
       <div className="container py-2">
         <a href="/" className="navbar-brand">
-          Tezos Lottery
+          Tezos Escrow
         </a>
         <div className="d-flex">
           {/* TODO 4.b - Call connectWallet function onClick  */}

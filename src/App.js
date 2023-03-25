@@ -1,100 +1,255 @@
 import { useState, useEffect } from "react";
 
 // Components
-import Navbar from "./components/Navbar";
-import { buyTicketOperation, endGameOperation } from "./utils/operation";
+import { addBalanceOwner,addBalanceCounterparty, revert, claimCounterparty, claimOwner } from "./utils/operation";
 import { fetchStorage } from "./utils/tzkt";
+import { connectWallet, getAccount } from "./utils/wallet";
 
 const App = () => {
-  // Players holding lottery tickets
-  const [players, setPlayers] = useState([]);
-  const [tickets, setTickets] = useState(5);
-  const [loading, setLoading] = useState(false);
-  const [ticketValue, setTicketValue] = useState("");
 
-  // Set players and tickets remaining
+    const [depositValue, setDepositValue] = useState(0);
+    const [hashValue, setHashValue] = useState([])
+    const [account, setAccount] = useState("");
+    const [owner, setOwner] = useState("");
+    const [counterparty, setCounterparty] = useState("")
+    const [ownerWidthdraw, setownerWidthdraw] = useState(localStorage.getItem('ownerWidthdraw') === 'true');
+    const [counterpartyWidthdraw, setCounterpartyWidthdraw] = useState(localStorage.getItem('counterpartyWidthdraw') === 'true')
+    const [admin, setAdmin] = useState("")
+
+    const [isAdmin, setIsAdmin] = useState(localStorage.getItem('isAdmin') === 'true')
+    const [isOwner, setIsOwner] = useState(localStorage.getItem('isOwner') === 'true')
+    const [isCounterparty, setIsCounterparty] = useState(localStorage.getItem('isCounterparty') === 'true')
+
   useEffect(() => {
-    // TODO 9 - Fetch players and tickets remaining from storage
-    
+
     (async () => {
       const storage = await fetchStorage();
-      setPlayers(Object.values(storage.players));
-      setTickets(storage.tickets_available);
-    })();
-  }, []);
+      setOwner(storage.owner);
+      setCounterparty(storage.counterparty);
+      setAdmin(storage.admin);
 
-  // TODO 7.a - Complete onBuyTicket function
-  const onBuyTicket = async (event) => {
+      const activeAccount = await getAccount();
+      setAccount(activeAccount);
+
+      if (activeAccount == admin){
+        setIsAdmin(true);
+        setIsOwner(false);
+        setIsCounterparty(false);
+      }
+      else if (activeAccount == owner){
+        setIsAdmin(false);
+        setIsOwner(true);
+        setIsCounterparty(false);
+      }
+      else if (activeAccount == counterparty){
+        setIsAdmin(false);
+        setIsOwner(false);
+        setIsCounterparty(true);
+      }
+
+      console.log("Admin, Owner, Counterparty: ",isAdmin, isOwner, isCounterparty)
+
+      localStorage.setItem('ownerWidthdraw', ownerWidthdraw);
+      localStorage.setItem('counterpartyWidthdraw', counterpartyWidthdraw);
+
+      console.log("account: ", account)
+      console.log("ownerWidthdraw: ", ownerWidthdraw);
+      console.log("counterpartyWidthdraw: ", counterpartyWidthdraw, account);
+
+    })();
+  }, [ownerWidthdraw, counterpartyWidthdraw, account]);
+
+  const onConnectWallet = async () => {
+    await connectWallet();
+    const activeAccount = await getAccount();
+    setAccount(activeAccount);
+
+  };
+
+  // Depositing the balance for owner and counterparty
+  const onDeposit = async (event) => {
     event.preventDefault();
-    const numOfTickets = ticketValue ? parseInt(ticketValue) : 0;
-    console.log(`Input value: ${numOfTickets}`);
+    const amount = depositValue ? parseInt(depositValue) : 0;
+    console.log(`Input value: ${amount}`);
+    console.log(owner)
+    console.log(account)
+    console.log(account == owner);
     
     try{
-      setLoading(true)
-      await buyTicketOperation(numOfTickets)
-      alert("Transaction successful")
+      if (account == owner){
+        console.log("adding balance to owner")
+        await addBalanceOwner(amount)
+        alert("Owner Transaction Successful")
+      }
+      else if (account === counterparty){
+        console.log("adding balance to counterparty")
+        await addBalanceCounterparty(amount)
+        alert("Counterparty Transaction Successful")
+      }
+      
     }
     catch(err){
       alert("Transaction failed: ", err.message);
     }
-    setLoading(false)
 
   };
 
-  // TODO 11.a - Complete onEndGame function
-  const onEndGame = async () => {
-    try {
-      setLoading(true)
-      await endGameOperation()
-      alert("Transation successful")
-    } catch (error) {
-      throw error
+  // Setting the values if the people want to widthdraw
+  const onWidthdraw = async (event) => {
+    event.preventDefault();
+
+    if (account == owner){
+      console.log("owner is widthdrawing")
+      setownerWidthdraw(!ownerWidthdraw)
+      console.log(ownerWidthdraw)
     }
-    setLoading(false)
+    else if (account === counterparty){
+      console.log("counterparty is widthdrawing")
+      setCounterpartyWidthdraw(!counterpartyWidthdraw)
+      console.log(counterpartyWidthdraw)
+    }
 
   };
 
-  const handleInputChange = (event) => {
-    setTicketValue(event.target.value);
+  const onRevert = async (event) => {
+    event.preventDefault();
+
+    try{
+      console.log("trying to revert balance")
+      await revert(ownerWidthdraw, counterpartyWidthdraw)
+      alert("reverted balance successfully")
+    }
+    catch(err){
+      alert("Transaction failed: ", err.message);
+    }
+
+  };
+
+  const onClaim = async(event) => {
+    event.preventDefault();
+
+    const encoder = new TextEncoder();
+    const hash = encoder.encode(hashValue);
+    console.log(hash);
+
+    console.log(hash)
+
+
+    try{
+      if (account == owner){
+        await claimOwner()
+        alert("Owner Claim Successful")
+
+
+      }
+      else if (account == counterparty){
+
+        console.log("claiming counterparty")
+        await claimCounterparty(hash)
+        alert("Counterparty Claim Successful")
+
+      }
+    }
+    catch(err){
+      alert("Transaction failed: ", err.message);
+    }
+  }; 
+
+  const handleDepositChange = (event) => {
+    setDepositValue(event.target.value);
+    console.log(depositValue)
+  };
+
+  const handleHashChange = (event) => {
+    setHashValue(event.target.value)
+    console.log(hashValue)
   };
 
   return (
     <div className="h-100">
-      <Navbar />
-      <div className="d-flex flex-column justify-content-center align-items-center h-100">
-        {/* Ticket remaining display */}
-        <div className="py-1">Tickets remaining: {tickets}</div>
-        {/* Action Buttons */}
-        {tickets > 0 ? (
-          <form>
-
-            <div className="py-1">Number of Tickets To Buy</div>         
-            <input type="number" pattern="[0-9]*" value={ticketValue} onChange={handleInputChange}  />
-            <br />
-            <button onClick={onBuyTicket} className="btn btn-primary btn-lg">
-              {/* TODO 7.b - Call onBuyTicket on click */}
-              {/* TODO 7.c - Show "loading..." when buying operation is pending */}
-              { loading ? "Loading..." : "Buy Ticket"}
-            </button>
-          </form>
-            
-        ) : (
-          <button onClick={onEndGame} className="btn btn-success btn-lg">
-            {/* TODO 11.b - Call onEndGame on click */}
-            {/* TODO 11.c - Show "loading..." when buying operation is pending */}
-            { loading ? "Loading.." : "End Game"}
-          </button>
-        )}
-        {/* List of Players */}
-        <div className="mt-2">
-          {players.map((player, index) => (
-            <div key={index}>
-              <b>Ticket {index + 1}:</b> {player}
+      <div>
+        <div className="navbar navbar-dark bg-dark">
+          <div className="container py-2">
+            <a href="/" className="navbar-brand">
+              Tezos Escrow
+            </a>
+            <div className="d-flex">
+              {/* TODO 4.b - Call connectWallet function onClick  */}
+              <button onClick={onConnectWallet} className="btn btn-outline-info">
+                {/* TODO 5.a - Show account address if wallet is connected */}
+                { account !=="" ? account : "Connect Wallet"}
+              </button>
             </div>
-          ))}
+          </div>
         </div>
       </div>
+      
+      <div className="wrapper center">
+
+      <div class="card">
+        <div class="card-body">
+          <form>
+            {isOwner && <h3>Hi, Owner!</h3>}
+            {isAdmin && <h3>Hi, Admin!</h3>}
+            {isCounterparty && <h3>Hi, Counterparty!</h3>}
+
+            {(isOwner || isCounterparty) &&
+              <div class="form-group mb-2">
+                <input type="number" class="form-control" pattern="[0-9]*" placeholder="Number of tickets to purchase" value={depositValue} onChange={handleDepositChange}  />
+              </div>
+            }
+            
+            {isCounterparty &&
+                <div class="form-group mb-2">
+                  <input type="text" class="form-control" placeholder="Hash" value={hashValue} onChange={handleHashChange}  />
+                </div>
+            }
+
+            <div class = "center">
+              {/* show if owner or counterparty */}
+              {(isOwner || isCounterparty) &&
+                <button onClick={onDeposit} className="btn btn-primary btn-lg ">
+                  Deposit
+                </button>
+              }
+
+              {/* show if owner or counterparty */}
+              {(isOwner || isCounterparty) &&
+                <button onClick={onClaim} className="btn btn-primary btn-lg ">
+                  Claim
+                </button>
+              }
+
+              {/* show if owner or counterparty */}
+              {(isOwner || isCounterparty) &&
+                <button onClick={onWidthdraw}  className="btn btn-primary btn-lg ">
+                  {((isOwner && ownerWidthdraw) || (isCounterparty && counterpartyWidthdraw)) ?
+                    "Unwidthdraw"
+                    :
+                    "Widthdraw"
+                  }
+
+                </button>
+              }
+              
+
+              {/* show if admin */}
+              {isAdmin &&
+                  <button onClick={onRevert} className="btn btn-primary btn-lg ">
+                    Revert
+                   </button>
+              }
+              
+            </div>  
+            
+          </form>
+        </div>
+      </div>
+
+       
+      </div>
     </div>
+
   );
 };
 
