@@ -11,6 +11,7 @@ class Escrow(sp.Contract):
                   owner               = owner,               #address of owner
                   counterparty        = counterparty,        #address of counterparty
                   admin               = admin,               #address of the admin
+                  inputSecret         = sp.bytes("0x00000000")
                   )
 
     # Adds funds to the contract from the owner's account
@@ -25,7 +26,7 @@ class Escrow(sp.Contract):
 
         sp.if self.data.balanceCounterparty != sp.tez(0):
             new_epoch = sp.now
-            new_epoch = new_epoch.add_seconds(300)
+            new_epoch = new_epoch.add_seconds(180)
             self.data.epoch = new_epoch
 
 
@@ -41,7 +42,7 @@ class Escrow(sp.Contract):
 
         sp.if self.data.balanceOwner != sp.tez(0):
             new_epoch = sp.now
-            new_epoch = new_epoch.add_seconds(300)
+            new_epoch = new_epoch.add_seconds(180)
             self.data.epoch = new_epoch
 
    
@@ -61,9 +62,12 @@ class Escrow(sp.Contract):
     @sp.entry_point
     def claimCounterparty(self, params):
 
+        self.data.inputSecret = sp.blake2b(params.secret)
+
         #checks if the timestamp is within the epoch and that the hashed secret is correct
         sp.verify(sp.now < self.data.epoch, "EXPIRED")
-        sp.verify(self.data.hashedSecret == sp.blake2b(params.secret), "WRONG SECRET")
+        sp.verify(self.data.hashedSecret == self.data.inputSecret, "WRONG SECRET")
+        
 
         #uses the claim entry_point to claim the funds
         self.claim(self.data.counterparty)
@@ -72,7 +76,7 @@ class Escrow(sp.Contract):
     def claimOwner(self):
 
         #checks if the epoch is lower than now
-        sp.verify(self.data.epoch < sp.now)
+        sp.verify(self.data.epoch < sp.now, "TOO SOON")
 
         #uses the claim entry_point to claim the funds
         self.claim(self.data.owner)
@@ -101,7 +105,8 @@ def test():
     scenario = sp.test_scenario()
     scenario.h1("Escrow")
 
-    contract = Escrow(sp.address("tz1YQreoL3HXshDUxzZScsfcexK9E4h6Np7p"), sp.tez(50), sp.address("tz1d9Nzx3m2YBrTRuXKjaw5uwMdV2jsa7UDw"), sp.tez(4), sp.now, sp.bytes("0xc2e588e23a6c8b8192da64af45b7b603ac420aefd57cc1570682350154e9c04e"), sp.address("tz1eWNVFay3mnsPj4evRMrJeUiSs17HLMe7a"))
+    hash = sp.blake2b(sp.bytes("0x70617373776f7264"))
+    contract = Escrow(sp.address("tz1YQreoL3HXshDUxzZScsfcexK9E4h6Np7p"), sp.tez(50), sp.address("tz1d9Nzx3m2YBrTRuXKjaw5uwMdV2jsa7UDw"), sp.tez(4), sp.now, hash, sp.address("tz1eWNVFay3mnsPj4evRMrJeUiSs17HLMe7a"))
 
     scenario += contract
 
