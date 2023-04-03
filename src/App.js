@@ -189,6 +189,7 @@ const App = () => {
       <div class="card">
         <div class="card-body">
           <form>
+            {!isOwner && !isAdmin && !isCounterparty && <h3>Connect a Wallet!</h3>}
             {isOwner && <h3>Hi, Owner!</h3>}
             {isAdmin && <h3>Hi, Admin!</h3>}
             {isCounterparty && <h3>Hi, Counterparty!</h3>}
