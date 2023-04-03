@@ -46,6 +46,11 @@ const App = () => {
         setIsOwner(false);
         setIsCounterparty(true);
       }
+      else{
+        setIsAdmin(false);
+        setIsOwner(false);
+        setIsCounterparty(false);
+      }
 
       console.log("Admin, Owner, Counterparty: ",isAdmin, isOwner, isCounterparty)
 
