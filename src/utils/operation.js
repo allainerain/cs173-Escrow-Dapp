@@ -6,7 +6,7 @@ export const addBalanceOwner = async (amountDeposit) => {
     try{
         console.log("calling contract, amount to deposit is:" %amountDeposit)
         //get the smart contract from tezos wallet by giving the address of the smart contract
-        const contract = await tezos.wallet.at("KT1XruRL66u3a3qFyyh4vD5Df79V4wTHdW3J");
+        const contract = await tezos.wallet.at("KT1BjJ5bPzZph23BLhVMvvp2pfQ6KegcPC92");
         // get the method addBalanceOwner and add the inputted amount from the front end as the amount here
 
         console.log("giving the deposit of owner");
@@ -26,7 +26,7 @@ export const addBalanceOwner = async (amountDeposit) => {
 export const addBalanceCounterparty = async (amountDeposit) => {
     try{
         //get the smart contract from tezos wallet by giving the address of the smart contract
-        const contract = await tezos.wallet.at("KT1XruRL66u3a3qFyyh4vD5Df79V4wTHdW3J");
+        const contract = await tezos.wallet.at("KT1BjJ5bPzZph23BLhVMvvp2pfQ6KegcPC92");
         // get the method addBalanceCounterparty and add the inputted amount from the front end as the amount here
 
         console.log("giving the deposit of counterparty");
@@ -46,7 +46,7 @@ export const addBalanceCounterparty = async (amountDeposit) => {
 export const claimCounterparty = async (secret) => {
     try{
         //get the smart contract from tezos wallet by giving the address of the smart contract
-        const contract = await tezos.wallet.at("KT1XruRL66u3a3qFyyh4vD5Df79V4wTHdW3J");
+        const contract = await tezos.wallet.at("KT1BjJ5bPzZph23BLhVMvvp2pfQ6KegcPC92");
 
         console.log("giving the deposit of counterparty with code", secret);
         console.log(typeof secret);
@@ -61,7 +61,7 @@ export const claimCounterparty = async (secret) => {
 export const claimOwner = async () => {
     try{
         //get the smart contract from tezos wallet by giving the address of the smart contract
-        const contract = await tezos.wallet.at("KT1XruRL66u3a3qFyyh4vD5Df79V4wTHdW3J");
+        const contract = await tezos.wallet.at("KT1BjJ5bPzZph23BLhVMvvp2pfQ6KegcPC92");
         // get the method addBalanceCounterparty and add the inputted amount from the front end as the amount here
 
         console.log("giving the deposit of counterparty");
@@ -77,7 +77,7 @@ export const claimOwner = async () => {
 export const revert = async (ownerWidthdraw, counterpartyWidthdraw) => {
     try{
         //get the smart contract from tezos wallet by giving the address of the smart contract
-        const contract = await tezos.wallet.at("KT1XruRL66u3a3qFyyh4vD5Df79V4wTHdW3J");
+        const contract = await tezos.wallet.at("KT1BjJ5bPzZph23BLhVMvvp2pfQ6KegcPC92");
         // get the method addBalanceCounterparty and add the inputted amount from the front end as the amount here
 
         console.log("giving the deposit of counterparty");

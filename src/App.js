@@ -31,17 +31,17 @@ const App = () => {
       const activeAccount = await getAccount();
       setAccount(activeAccount);
 
-      if (activeAccount == admin){
+      if (activeAccount === admin){
         setIsAdmin(true);
         setIsOwner(false);
         setIsCounterparty(false);
       }
-      else if (activeAccount == owner){
+      else if (activeAccount === owner){
         setIsAdmin(false);
         setIsOwner(true);
         setIsCounterparty(false);
       }
-      else if (activeAccount == counterparty){
+      else if (activeAccount === counterparty){
         setIsAdmin(false);
         setIsOwner(false);
         setIsCounterparty(true);
@@ -57,7 +57,7 @@ const App = () => {
       console.log("counterpartyWidthdraw: ", counterpartyWidthdraw, account);
 
     })();
-  }, [ownerWidthdraw, counterpartyWidthdraw, account]);
+  }, [ownerWidthdraw, counterpartyWidthdraw, account, admin, counterparty, isAdmin, isCounterparty, isOwner, owner]);
 
   const onConnectWallet = async () => {
     await connectWallet();
@@ -73,10 +73,10 @@ const App = () => {
     console.log(`Input value: ${amount}`);
     console.log(owner)
     console.log(account)
-    console.log(account == owner);
+    console.log(account === owner);
     
     try{
-      if (account == owner){
+      if (account === owner){
         console.log("adding balance to owner")
         await addBalanceOwner(amount)
         alert("Owner Transaction Successful")
@@ -98,7 +98,7 @@ const App = () => {
   const onWidthdraw = async (event) => {
     event.preventDefault();
 
-    if (account == owner){
+    if (account === owner){
       console.log("owner is widthdrawing")
       setownerWidthdraw(!ownerWidthdraw)
       console.log(ownerWidthdraw)
@@ -136,13 +136,13 @@ const App = () => {
 
 
     try{
-      if (account == owner){
+      if (account === owner){
         await claimOwner()
         alert("Owner Claim Successful")
 
 
       }
-      else if (account == counterparty){
+      else if (account === counterparty){
 
         console.log("claiming counterparty")
         await claimCounterparty(hash)
