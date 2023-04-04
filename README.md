@@ -7,3 +7,6 @@ View the delployed dapp <a href="https://cs173-escrow-dapp.netlify.app/">here</a
 <br/>
 Explore the deployed escrow smart contract <a href="https://smartpy.dev/explorer?address=KT1BjJ5bPzZph23BLhVMvvp2pfQ6KegcPC92">here</a>.
 <br/>
+<br/>
+Created by Allaine Tan for CS173: Blockchain Technologies
+
