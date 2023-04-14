@@ -16,6 +16,9 @@ const App = () => {
     const [counterpartyWidthdraw, setCounterpartyWidthdraw] = useState(localStorage.getItem('counterpartyWidthdraw') === 'true')
     const [admin, setAdmin] = useState("")
 
+    const [fromOwner, setFromOwner] = useState(0)
+    const [fromCounterparty, setFromCounterparty] = useState(0)
+
     const [isAdmin, setIsAdmin] = useState(localStorage.getItem('isAdmin') === 'true')
     const [isOwner, setIsOwner] = useState(localStorage.getItem('isOwner') === 'true')
     const [isCounterparty, setIsCounterparty] = useState(localStorage.getItem('isCounterparty') === 'true')
@@ -27,6 +30,8 @@ const App = () => {
       setOwner(storage.owner);
       setCounterparty(storage.counterparty);
       setAdmin(storage.admin);
+      setFromCounterparty(storage.fromCounterparty);
+      setFromOwner(storage.fromOwner);
 
       const activeAccount = await getAccount();
       setAccount(activeAccount);
@@ -195,9 +200,9 @@ const App = () => {
         <div class="card-body">
           <form>
             {!isOwner && !isAdmin && !isCounterparty && <h3>Connect a Wallet!</h3>}
-            {isOwner && <h3>Hi, Owner!</h3>}
+            {isOwner && <div><h3>Hi, Owner!</h3> <p>You need to deposit {fromOwner/1000000} tez.</p></div>}
             {isAdmin && <h3>Hi, Admin!</h3>}
-            {isCounterparty && <h3>Hi, Counterparty!</h3>}
+            {isCounterparty && <div><h3>Hi, Counterparty!</h3> <p>You need to deposit {fromCounterparty/1000000} tez.</p></div>}
 
             {(isOwner || isCounterparty) &&
               <div class="form-group mb-2">
