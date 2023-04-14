@@ -65,6 +65,8 @@ class Escrow(sp.Contract):
         self.data.inputSecret = sp.blake2b(params.secret)
 
         #checks if the timestamp is within the epoch and that the hashed secret is correct
+        sp.verify(self.data.balanceOwner != sp.tez(0), "OWNER HASN'T DEPOSITED")
+        sp.verify(self.data.balanceCounterparty != sp.tez(0), "COUNTERPARTY HASN'T DEPOSITED")
         sp.verify(sp.now < self.data.epoch, "EXPIRED")
         sp.verify(self.data.hashedSecret == self.data.inputSecret, "WRONG SECRET")
         
@@ -76,6 +78,8 @@ class Escrow(sp.Contract):
     def claimOwner(self):
 
         #checks if the epoch is lower than now
+        sp.verify(self.data.balanceOwner != sp.tez(0), "OWNER HASN'T DEPOSITED")
+        sp.verify(self.data.balanceCounterparty != sp.tez(0), "COUNTERPARTY HASN'T DEPOSITED")
         sp.verify(self.data.epoch < sp.now, "TOO SOON")
 
         #uses the claim entry_point to claim the funds
