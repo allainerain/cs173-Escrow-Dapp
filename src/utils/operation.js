@@ -14,7 +14,7 @@ export const addBalanceOwner = async (amountDeposit) => {
             {
             amount: amountDeposit,
             mutez: false,
-        }
+            }
         )
         await op.confirmation(1);
     }
