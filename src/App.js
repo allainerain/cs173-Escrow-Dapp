@@ -12,7 +12,7 @@ const App = () => {
     const [account, setAccount] = useState("");
     const [owner, setOwner] = useState("");
     const [counterparty, setCounterparty] = useState("");
-    const [ownerWidthdraw, setownerWidthdraw] = useState(localStorage.getItem('ownerWidthdraw') === 'true');
+    const [ownerWidthdraw, setOwnerWidthdraw] = useState(localStorage.getItem('ownerWidthdraw') === 'true');
     const [counterpartyWidthdraw, setCounterpartyWidthdraw] = useState(localStorage.getItem('counterpartyWidthdraw') === 'true');
     const [admin, setAdmin] = useState("");
 
@@ -28,6 +28,10 @@ const App = () => {
     const [isCounterparty, setIsCounterparty] = useState(localStorage.getItem('isCounterparty') === 'true');
     const [ownerDeposited, setOwnerDeposited] = useState(localStorage.getItem('ownerDeposited') === 'true');
     const [counterpartyDeposited, setCounterpartyDeposited] = useState(localStorage.getItem('counterpartyDeposited') === 'true');
+
+    const [isLoadingDeposit, setIsLoadingDeposit] = useState(false);
+    const [isLoadingClaim, setIsLoadingClaim] = useState(false);
+    const [isLoadingRevert, setIsLoadingRevert] = useState(false);
 
   useEffect(() => {
 
@@ -116,7 +120,6 @@ const App = () => {
   // Depositing the balance for owner and counterparty
   const onDeposit = async (event) => {
 
-
     event.preventDefault();
     const storage = await fetchStorage();
     const amount = depositValue ? parseInt(depositValue) : 0;
@@ -126,6 +129,7 @@ const App = () => {
     console.log(account === owner);
     
     try{
+      setIsLoadingDeposit(true)
       if (account === owner){
         console.log("adding balance to owner")
         await addBalanceOwner(amount)
@@ -140,21 +144,22 @@ const App = () => {
         setBalanceCounterparty(storage.balanceCounterparty)
         window.location.reload();
       }
-      
     }
     catch(err){
       alert("Transaction failed: ", err.message);
     }
+
+    setIsLoadingDeposit(false);
 
   };
 
   // Setting the values if the people want to widthdraw
   const onWidthdraw = async (event) => {
     event.preventDefault();
-
+  
     if (account === owner){
       console.log("owner is widthdrawing")
-      setownerWidthdraw(!ownerWidthdraw)
+      setOwnerWidthdraw(!ownerWidthdraw)
       console.log(ownerWidthdraw)
     }
     else if (account === counterparty){
@@ -169,14 +174,19 @@ const App = () => {
     event.preventDefault();
 
     try{
+      setIsLoadingRevert(true)
       console.log("trying to revert balance");
       await revert(ownerWidthdraw, counterpartyWidthdraw);
       alert("reverted balance successfully");
-      setEpoch("");
+      setCounterpartyWidthdraw(!counterpartyWidthdraw);
+      setOwnerWidthdraw(!ownerWidthdraw);
+      console.log("resetting widthdraw:", counterpartyWidthdraw, ownerWidthdraw)
     }
     catch(err){
       alert("Transaction failed: ", err.message);
     }
+
+    setIsLoadingRevert(false)
 
   };
 
@@ -187,24 +197,24 @@ const App = () => {
     const hash = encoder.encode(hashValue);
 
     try{
+      setIsLoadingClaim(true);
       if (account === owner){
-        await claimOwner()
-        alert("Owner Claim Successful")
-        setEpoch("");
-        window.location.reload();
+        await claimOwner();
+        alert("Owner Claim Successful");
       }
       else if (account === counterparty){
-        console.log("claiming counterparty")
-        await claimCounterparty(hash)
-        alert("Counterparty Claim Successful")
-        setEpoch("");
-        window.location.reload();
-
+        await claimCounterparty(hash);
+        alert("Counterparty Claim Successful");
       }
+      setCounterpartyWidthdraw(!counterpartyWidthdraw);
+      setOwnerWidthdraw(!ownerWidthdraw);
+      window.location.reload();
     }
     catch(err){
       alert("Transaction failed: ", err.message);
     }
+
+    setIsLoadingClaim(false)
   }; 
 
   const handleDepositChange = (event) => {
@@ -225,10 +235,8 @@ const App = () => {
             <a href="/" className="navbar-brand">
               Tezos Escrow
             </a>
-            <div className="d-flex">
-              {/* TODO 4.b - Call connectWallet function onClick  */}
+            <div className="d-flex">      
               <button onClick={onConnectWallet} className="btn btn-outline-info">
-                {/* TODO 5.a - Show account address if wallet is connected */}
                 { account !=="" ? account : "Connect Wallet"}
               </button>
             </div>
@@ -245,22 +253,20 @@ const App = () => {
             {isOwner && 
               <div>
               <h3>Hi, Owner!</h3> 
-              { ownerDeposited ?  <p>You have already deposited</p> : <p>You need to deposit {fromOwner/1000000} tez.</p>}
-              {/* {(balanceOwner === 0) && <p>You need to deposit {fromOwner/1000000} tez.</p>} */}
-              {/* <p>You need to deposit {fromOwner/1000000} tez.</p> */}
+                {ownerDeposited ?  <p>You have already deposited.</p> : <p>You need to deposit {fromOwner/1000000} tez.</p>}
+                {(!counterpartyDeposited && ownerDeposited) ?  <p>Wait for counterparty to deposit.</p> : <p></p>}
               </div>
-              }
+            }
 
             {isAdmin && <h3>Hi, Admin!</h3>}
             {isCounterparty && 
-            
-            <div>
-              <h3>Hi, Counterparty!</h3> 
-              {counterpartyDeposited ? <p>You have already deposited.</p> : <p>You need to deposit {fromCounterparty/1000000} tez.</p>}
-              {/*{(balanceCounterparty === 0) && <p>You need to deposit {fromCounterparty/1000000} tez.</p>} */}
-              {/* <p>You need to deposit {fromCounterparty/1000000} tez.</p> */}
-            </div>
-            
+              <div>
+                <h3>Hi, Counterparty!</h3> 
+                {counterpartyDeposited ? <p>You have already deposited.</p> : <p>You need to deposit {fromCounterparty/1000000} tez.</p>}
+                {(!ownerDeposited && counterpartyDeposited ) ? <p>Wait for owner to deposit.</p> : <p></p>}
+                {/*{(balanceCounterparty === 0) && <p>You need to deposit {fromCounterparty/1000000} tez.</p>} */}
+                {/* <p>You need to deposit {fromCounterparty/1000000} tez.</p> */}
+              </div>
             }
 
             {((isOwner && !ownerDeposited) || (isCounterparty && !counterpartyDeposited)) &&
@@ -270,29 +276,28 @@ const App = () => {
             }
             
             {(isCounterparty && (counterpartyDeposited) && ownerDeposited) &&
-                <div class="form-group mb-2">
-                  <input type="password" class="form-control" placeholder="Hash" value={hashValue} onChange={handleHashChange}  />
-                </div>
+              <div class="form-group mb-2">
+                <input type="password" class="form-control" placeholder="Hash" value={hashValue} onChange={handleHashChange}  />
+              </div>
             }
 
             <div class = "center">
               {/* show if owner or counterparty */}
               {((isOwner && !ownerDeposited) || (isCounterparty && !counterpartyDeposited)) &&
                 <button onClick={onDeposit} className="btn btn-primary btn-lg ">
-                  Deposit
+                  {isLoadingDeposit ? "Loading" : "Deposit"}
                 </button>
               }
 
               {/* show if owner or counterparty */}
               {((isOwner || isCounterparty) && (ownerDeposited) && (counterpartyDeposited)) &&
                 <button onClick={onClaim} className="btn btn-primary btn-lg ">
-                  Claim 
-                  
-                  {(isOwner && " after ")}
-                  {(isCounterparty) && " before "}
-                  
-                  {formattedEpoch}
+                  {isLoadingClaim ? "Loading" : "Claim"}
+                  {(isOwner && !isLoadingClaim) && " after "}
+                  {(isCounterparty && !isLoadingClaim) && " before "}
+                  {(!isLoadingClaim) && formattedEpoch}
                 </button>
+             
               }
 
               {/* show if owner or counterparty */}
@@ -303,30 +308,25 @@ const App = () => {
                     :
                     "Widthdraw"
                   }
-
                 </button>
+                
               }
               
               {/* show if admin */}
               {isAdmin &&
-              <div>
-                {ownerWidthdraw ? <p>Owner wants to widthdraw.</p> : <p>Owner doesn't want to widthdraw.</p>}
-                {counterpartyWidthdraw ? <p>Counterparty wants to widthdraw.</p> : <p>Counterparty doesn't want to widthdraw.</p>}
-                <button onClick={onRevert} className="btn btn-primary btn-lg ">
-                  Revert
-                </button>
-
-              </div>
-                  
+                <div>
+                  {ownerWidthdraw ? <p>Owner wants to widthdraw.</p> : <p>Owner doesn't want to widthdraw.</p>}
+                  {counterpartyWidthdraw ? <p>Counterparty wants to widthdraw.</p> : <p>Counterparty doesn't want to widthdraw.</p>}
+                  <button onClick={onRevert} className="btn btn-primary btn-lg ">
+                    {isLoadingRevert ? "Loading" : "Revert"}
+                  </button>
+                </div>
               }
-              
             </div>  
-            
           </form>
         </div>
       </div>
 
-       
       </div>
     </div>
 
